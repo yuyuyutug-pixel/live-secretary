@@ -1,0 +1,1 @@
+const Store={key:"live-secretary-v1",load(){try{return JSON.parse(localStorage.getItem(this.key))||{}}catch{return{}}},save(v){localStorage.setItem(this.key,JSON.stringify({...this.load(),...v}))},clear(){localStorage.removeItem(this.key)}};window.Store=Store;
