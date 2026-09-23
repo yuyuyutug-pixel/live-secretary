@@ -1,0 +1,9 @@
+{
+  "name": "LIVE秘書",
+  "short_name": "LIVE秘書",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080d1a",
+  "theme_color": "#080d1a",
+  "description": "配信者向けLIVEアシスタント"
+}
