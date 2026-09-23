@@ -1,0 +1,4 @@
+// Spoon Developers公開後、このinterfaceに公式API実装を追加する。
+class LiveProvider{async connect(){throw new Error("not implemented")}async disconnect(){}async sendMessage(message){}onComment(handler){}onJoin(handler){}onLeave(handler){}}
+class MockLiveProvider extends LiveProvider{constructor(){super();this.handlers={comment:[],join:[],leave:[]}}async connect(){return{ok:true,mode:"mock"}}async sendMessage(message){return{ok:true,message}}onComment(h){this.handlers.comment.push(h)}onJoin(h){this.handlers.join.push(h)}onLeave(h){this.handlers.leave.push(h)}emit(type,payload){(this.handlers[type]||[]).forEach(h=>h(payload))}}
+window.LiveProvider=LiveProvider;window.MockLiveProvider=MockLiveProvider;
