@@ -1,0 +1,1 @@
+window.PLANS={FREE:{prompt:true,topic:true,psych:false,game:false,analytics:false,personas:["しっかり秘書","関西ツッコミ"]},STANDARD:{prompt:true,topic:true,psych:true,game:true,analytics:true,personas:["しっかり秘書","関西ツッコミ","毒舌","ふわふわ","執事"]},PRO:{prompt:true,topic:true,psych:true,game:true,analytics:true,aiFuture:true,custom:true}};
