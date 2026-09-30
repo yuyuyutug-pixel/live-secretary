@@ -155,7 +155,7 @@ header{height:72px;display:flex;align-items:center;justify-content:space-between
 #feed{height:292px;overflow:auto;border-top:1px solid var(--line);padding:9px 2px 0;position:relative}
 .message{display:flex;gap:8px;margin:9px 0}
 .message>span{width:34px;height:34px;flex:0 0 34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,var(--pink),var(--purple));font-size:8px}
-.message.bot>span{font-size:0;background:url("assets/bot-blue.svg") center/contain no-repeat}
+.message.bot>span{font-size:0;background:url("assets/p0/08_bot_normal.png") center/contain no-repeat}
 .message p{margin:0;max-width:84%;background:rgba(25,33,58,.92);border:1px solid var(--line);border-radius:5px 14px 14px;padding:10px 11px;font-size:10px;line-height:1.55}
 .message.user p{background:rgba(55,34,76,.92)}
 .composer{display:flex;gap:8px;margin:10px 0}
@@ -316,3 +316,6 @@ nav button.active b{border-radius:10px;background:linear-gradient(135deg,rgba(25
 .insight-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .empty-icon{display:grid!important;place-items:center;width:58px;height:58px;margin:0 auto;border-radius:18px;background:linear-gradient(145deg,rgba(154,103,255,.16),rgba(255,79,163,.10));border:1px solid var(--line)}
 .empty-icon svg{width:28px;height:28px;fill:none;stroke:#a78cff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.qicon img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 5px 12px rgba(0,0,0,.24))}
+.hero-bot,.assistant-avatar img,.bot-state img,.personas img,.secretary-stage img{image-rendering:auto}
