@@ -307,3 +307,12 @@ nav button.active b{border-radius:10px;background:linear-gradient(135deg,rgba(25
   .mode-chips button{padding:7px 9px}
   .session-summary{gap:5px}
 }
+
+.screen-head .back svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.assist-icon{display:grid!important;place-items:center;margin:0 auto 2px}
+.assist-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.action-stack i svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.insight-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:11px;background:rgba(75,221,235,.10);color:#6ae5ee}
+.insight-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.empty-icon{display:grid!important;place-items:center;width:58px;height:58px;margin:0 auto;border-radius:18px;background:linear-gradient(145deg,rgba(154,103,255,.16),rgba(255,79,163,.10));border:1px solid var(--line)}
+.empty-icon svg{width:28px;height:28px;fill:none;stroke:#a78cff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
