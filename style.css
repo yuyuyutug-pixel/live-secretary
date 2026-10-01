@@ -232,3 +232,6 @@ nav button.active{color:#d8cbff}
   .live-tool-grid{grid-template-columns:repeat(2,1fr)}
   .mode-grid{grid-template-columns:repeat(2,1fr)}
 }
+
+body.in-live nav{display:none}
+body.in-live main{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
