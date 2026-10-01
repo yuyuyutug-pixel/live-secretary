@@ -235,3 +235,6 @@ nav button.active{color:#d8cbff}
 
 body.in-live nav{display:none}
 body.in-live main{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+
+.fatal-error{position:fixed;z-index:9999;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));padding:12px 14px;border:1px solid rgba(255,113,141,.35);border-radius:14px;background:#2a1119;color:#ffd7df;font-size:11px;line-height:1.55;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.fatal-error[hidden]{display:none}
