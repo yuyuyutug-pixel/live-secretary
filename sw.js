@@ -1,4 +1,4 @@
-const CACHE="live-secretary-v9";
+const CACHE="live-secretary-v10";
 const CORE=["./","./index.html","./style.css","./app.js","./content-data.js","./engine.js","./feature-flags.js","./storage.js","./provider.js","./manifest.json"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
