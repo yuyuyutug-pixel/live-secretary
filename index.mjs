@@ -1,9 +1,6 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 
-const ROOT=path.dirname(fileURLToPath(import.meta.url));
+const STATIC_RAW_BASE=(process.env.STATIC_RAW_BASE||"https://raw.githubusercontent.com/yuyuyutug-pixel/live-secretary/spoon-api-integration").replace(/\\/$/,"");
 const API_BASE=(process.env.SPOON_API_BASE||"https://jp-openapi.spooncast.net").replace(/\/$/,"");
 const AUTHORIZE_URL=process.env.SPOON_AUTHORIZE_URL||"https://spooncast.net/jp/oauth/authorize";
 const TOKEN_URL=process.env.SPOON_TOKEN_URL||API_BASE+"/v1/oauth/token";
@@ -64,11 +61,12 @@ async function readBody(req){const t=await req.text();if(!t)return{};try{return 
 async function staticResponse(pathname){
   let p=pathname==="/"?"/index.html":pathname;
   if(p.includes(".."))return json({error:"not found"},404);
-  const file=path.join(ROOT,p.replace(/^\//,""));
-  try{
-    const data=await readFile(file);
-    return new Response(data,{status:200,headers:{"content-type":MIME[path.extname(file)]||"application/octet-stream","cache-control":path.extname(file)===".html"?"no-cache":"public, max-age=300"}});
-  }catch{return json({error:"not found"},404)}
+  const target=STATIC_RAW_BASE+p;
+  const r=await fetch(target,{headers:{accept:"*/*"}});
+  if(!r.ok)return json({error:"not found"},404);
+  const ext=p.includes(".")?p.slice(p.lastIndexOf(".")):"";
+  const headers={"content-type":MIME[ext]||r.headers.get("content-type")||"application/octet-stream","cache-control":ext===".html"?"no-cache":"public, max-age=300"};
+  return new Response(r.body,{status:200,headers});
 }
 function sseProxy(upstream,extraHeaders={}){
   const reader=upstream.body.getReader();
