@@ -715,5 +715,14 @@ renderInteractive();
 initGateway();
 
 if("serviceWorker"in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  window.addEventListener("load",async()=>{
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+      if(window.caches){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(k=>k.startsWith("live-secretary-")).map(k=>caches.delete(k)));
+      }
+    }catch{}
+  });
 }
