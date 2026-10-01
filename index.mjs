@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-const STATIC_RAW_BASE=(process.env.STATIC_RAW_BASE||"https://raw.githubusercontent.com/yuyuyutug-pixel/live-secretary/spoon-api-integration").replace(/\\/$/,"");
+const STATIC_RAW_BASE=(process.env.STATIC_RAW_BASE||"https://raw.githubusercontent.com/yuyuyutug-pixel/live-secretary/spoon-api-integration").replace(/\/$/,"");
 const API_BASE=(process.env.SPOON_API_BASE||"https://jp-openapi.spooncast.net").replace(/\/$/,"");
 const AUTHORIZE_URL=process.env.SPOON_AUTHORIZE_URL||"https://spooncast.net/jp/oauth/authorize";
 const TOKEN_URL=process.env.SPOON_TOKEN_URL||API_BASE+"/v1/oauth/token";
