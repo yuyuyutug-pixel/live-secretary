@@ -1,7 +1,7 @@
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
 const D=window.LIVE_CONTENT||{},pick=a=>a?.length?a[Math.floor(Math.random()*a.length)]:"";
 let saved=Store.load();
-let state={running:false,silence:0,comments:0,viewers:0,interventions:0,responded:0,lastBot:false,persona:saved.persona||"しっかり秘書",mode:saved.mode||"雑談",maxSilence:0,duration:0,startedAt:0,_last:-999};
+let state={running:false,silence:0,comments:0,viewers:0,interventions:0,responded:0,lastBot:false,persona:saved.persona||"しっかり秘書",mode:saved.mode||"雑談",maxSilence:0,duration:0,startedAt:0,_last:-999,activeInteractive:null};
 let sessionTimer=null,provider=new MockLiveProvider(),remote=false,providerWired=false,apiStatus={configured:false,authenticated:false};
 
 function toast(t){let x=$("#toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),2200)}
@@ -48,7 +48,7 @@ function wireProvider(){
     if(!state.running)return;
     const text=payloadText(p)||"（コメント）";state.comments++;state.silence=0;
     if(state.lastBot){state.responded++;state.lastBot=false}
-    add(payloadName(p)+"："+text,"user");$("#stateText").textContent="コメントが動いたので待機します";update();
+    add(payloadName(p)+"："+text,"user");handleInteractiveAnswer(text,payloadName(p));$("#stateText").textContent="コメントが動いたので待機します";update();
   });
   provider.onJoin(p=>{
     if(!state.running)return;state.viewers++;add(payloadName(p)+" さんが入室","event");
@@ -82,6 +82,67 @@ function trackItem(item){if(!item?.text)return;Store.trackUse?.(item);renderDisc
 function formatTime(sec){let m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
 function voice(t){return state.persona==="関西ツッコミ"?t+" ほな、数字だけでも答えてみよか。":state.persona==="毒舌"?t+" 静かすぎるので秘書が仕事します。":state.persona==="ふわふわ"?t+" 気軽に答えてね。":state.persona==="執事"?"皆様、"+t:t}
 function add(t,type="bot"){let d=document.createElement("div");d.className="message "+type;d.innerHTML="<span>"+(type==="bot"?"":type==="event"?"◆":"●")+"</span><p></p>";d.querySelector("p").textContent=t;$("#feed").append(d);$("#feed").scrollTop=99999}
+
+function answerNumber(text){
+  const m=String(text||"").trim().match(/^[①②③④1-4１-４]$/);if(!m)return null;
+  const ch=m[0],map={"①":1,"②":2,"③":3,"④":4,"１":1,"２":2,"３":3,"４":4};
+  return map[ch]||Number(ch);
+}
+function interactivePrompt(interactive){
+  if(interactive.type==="psych"){
+    return interactive.test.q+" "+interactive.test.options.map((o,i)=>String(i+1)+" "+o).join(" / ");
+  }
+  return interactive.text;
+}
+function startInteractive(item){
+  if(!item)return;
+  let active;
+  if(item.kind==="psych"){
+    const test=item.raw||D.psych?.find(x=>psychPrompt(x)===item.text);
+    if(!test)return;
+    active={type:"psych",kind:"psych",category:test.category,test,text:psychPrompt(test),votes:[0,0,0,0],total:0,revealed:false};
+  }else if(item.kind==="choices"){
+    const parts=item.text.split(/\s+/);
+    active={type:"choice",kind:"choices",category:item.category,text:item.text,votes:[0,0],total:0,revealed:false};
+  }else if(item.kind==="games"){
+    const max=/[③④34]/.test(item.text)?4:2;
+    active={type:"game",kind:"games",category:item.category,text:item.text,votes:Array(max).fill(0),total:0,revealed:false};
+  }else return;
+  state.activeInteractive=active;trackItem(item);renderLiveInteractive();
+  bot(interactivePrompt(active));
+}
+function renderLiveInteractive(){
+  const panel=$("#interactivePanel");if(!panel)return;
+  const a=state.activeInteractive;
+  if(!a){panel.hidden=true;panel.innerHTML="";return}
+  panel.hidden=false;
+  const labels=a.type==="psych"?(a.test.options||[]):Array.from({length:a.votes.length},(_,i)=>String(i+1));
+  const title=a.type==="psych"?"心理テスト":a.type==="choice"?"二択":"参加型ゲーム";
+  const bars=labels.map((label,i)=>{
+    const count=a.votes[i]||0,pct=a.total?Math.round(count/a.total*100):0;
+    const result=a.type==="psych"&&a.revealed?(a.test.results?.[i]||""):"";
+    return '<div class="interactive-row"><div><b>'+(i+1)+'</b><span>'+label+'</span><em>'+count+'票 · '+pct+'%</em></div><i><u style="width:'+pct+'%"></u></i>'+(result?'<p>'+result+'</p>':'')+'</div>';
+  }).join("");
+  panel.innerHTML='<div class="interactive-head"><div><small>'+title+' · '+a.category+'</small><strong>'+a.text.split(" 1 ")[0]+'</strong></div><button id="interactiveClose">×</button></div>'+
+    '<div class="interactive-votes">'+bars+'</div>'+
+    '<div class="interactive-foot"><span>数字コメントを自動集計 · '+a.total+'回答</span>'+(a.type==="psych"?'<button id="interactiveReveal">'+(a.revealed?"結果表示中":"結果を見る")+'</button>':'')+'</div>';
+  $("#interactiveClose").onclick=()=>{state.activeInteractive=null;renderLiveInteractive()};
+  if($("#interactiveReveal"))$("#interactiveReveal").onclick=()=>{a.revealed=!a.revealed;renderLiveInteractive()};
+}
+function handleInteractiveAnswer(text,name="リスナー"){
+  const a=state.activeInteractive,n=answerNumber(text);if(!a||!n||n>a.votes.length)return false;
+  a.votes[n-1]++;a.total++;renderLiveInteractive();
+  if(a.type==="psych"&&a.revealed){
+    const result=a.test.results?.[n-1];if(result)$("#stateText").textContent=name+"："+result;
+  }else $("#stateText").textContent=name+" の回答を集計しました";
+  return true;
+}
+function launchContent(item){
+  if(!item?.text)return;
+  if(!state.running){start().then(()=>{if(item.kind==="topics"){trackItem(item);bot(item.text)}else startInteractive(item)});return}
+  if(item.kind==="topics"){trackItem(item);bot(item.text);return}
+  startInteractive(item);
+}
 function bot(t,item=null){
   if(!t)return;if(item)trackItem(item);const spoken=voice(t);add(spoken);state.interventions++;state.lastBot=true;$("#stateText").textContent="会話のきっかけを提案しました";update();
   if(remote&&state.running)provider.sendMessage(spoken).catch(e=>toast("Bot送信失敗: "+e.message));
@@ -105,7 +166,7 @@ async function start(topic){
   if(remote){
     try{await provider.connect()}catch(e){toast(e.message||"Spoon LIVEに接続できません");return}
   }else await provider.connect().catch(()=>{});
-  state.running=true;state.silence=0;state.maxSilence=0;state.duration=0;state.comments=0;state.interventions=0;state.responded=0;state.lastBot=false;state.startedAt=Date.now();state.viewers=remote?0:6;
+  state.running=true;state.silence=0;state.maxSilence=0;state.duration=0;state.comments=0;state.interventions=0;state.responded=0;state.lastBot=false;state.startedAt=Date.now();state.viewers=remote?0:6;state.activeInteractive=null;renderLiveInteractive();
   clearInterval(sessionTimer);sessionTimer=setInterval(()=>{if(!state.running)return;state.silence++;state.duration=Math.floor((Date.now()-state.startedAt)/1000);state.maxSilence=Math.max(state.maxSilence,state.silence);if(state.silence%30===0)intervene();update()},1000);
   $("#feed").innerHTML="";add(remote?"Spoon LIVE接続を開始しました。イベントを待っています。":"準備OK。デモモードで会話を見守ります。");
   let t=topic||$("#topic").value.trim();if(t)add("今日のテーマ「"+t+"」を覚えました。");
@@ -114,7 +175,7 @@ async function start(topic){
 $("#start").onclick=()=>start();$("#useRecommend").onclick=()=>{const it={kind:"topics",category:"初見",text:"最近ちょっと嬉しかったこと"};trackItem(it);start(it.text)};
 $("#skip").onclick=()=>{state.silence+=30;state.maxSilence=Math.max(state.maxSilence,state.silence);intervene();update()};
 $("#newcomer").onclick=()=>{if(remote){toast("本番ではSpoonの入室イベントを自動受信します");return}state.viewers++;if(features().new)bot("初見さんいらっしゃい！ 今の気分は ①元気 ②普通 ③お疲れ？ 数字だけでもどうぞ。");update()};
-$("#psychNow").onclick=()=>{const it=randomItem("psych");if(it)bot(it.text,it)};$("#gameNow").onclick=()=>{const it=randomItem("games");if(it)bot(it.text,it)};$("#instantAssist").onclick=()=>intervene(true);
+$("#psychNow").onclick=()=>{const it=randomItem("psych");if(it)startInteractive(it)};$("#gameNow").onclick=()=>{const it=randomItem("games");if(it)startInteractive(it)};$("#instantAssist").onclick=()=>intervene(true);
 async function endCurrentLive(fromSpoon=false){
   state.running=false;clearInterval(sessionTimer);if(remote&&!fromSpoon)await provider.disconnect().catch(()=>{});
   let rr=state.interventions?Math.round(state.responded/state.interventions*100):0;Store.addSession&&Store.addSession({at:new Date().toISOString(),mode:state.mode,persona:state.persona,duration:state.duration,viewers:state.viewers,comments:state.comments,interventions:state.interventions,responseRate:rr,maxSilence:state.maxSilence});
@@ -128,7 +189,7 @@ async function send(){
     try{await provider.sendMessage(v);add("BOT："+v,"bot");$("#manual").value="";$("#stateText").textContent="Botメッセージを送信しました"}catch(e){toast(e.message||"送信に失敗しました")}
     return;
   }
-  state.comments++;state.silence=0;if(state.lastBot){state.responded++;state.lastBot=false}add(v,"user");$("#manual").value="";$("#stateText").textContent="コメントが動いたので待機します";update();
+  state.comments++;state.silence=0;if(state.lastBot){state.responded++;state.lastBot=false}add(v,"user");handleInteractiveAnswer(v,"デモ");$("#manual").value="";if(!state.activeInteractive)$("#stateText").textContent="コメントが動いたので待機します";update();
 }
 $("#send").onclick=send;$("#manual").addEventListener("keydown",e=>e.key==="Enter"&&send());
 
@@ -161,7 +222,7 @@ function renderLib(search=""){
     const row=document.createElement("div");row.className="libitem";
     const main=document.createElement("button");main.className="lib-main";
     main.innerHTML="<small></small><p></p>";main.querySelector("small").textContent=(item.label||({"topics":"話題","choices":"二択","psych":"心理テスト","games":"ゲーム"}[item.kind]||"カード"))+" · "+item.category;main.querySelector("p").textContent=item.text;
-    main.onclick=()=>{trackItem(item);start(item.text)};
+    main.onclick=()=>launchContent(item);
     const fav=document.createElement("button");fav.className="fav-btn";fav.textContent=Store.isFavorite?.(item)?"★":"☆";fav.setAttribute("aria-label","お気に入り");
     fav.onclick=e=>{e.stopPropagation();const on=Store.toggleFavorite?.(item);fav.textContent=on?"★":"☆";toast(on?"お気に入りに追加":"お気に入りから削除");renderDiscovery()};
     row.append(main,fav);list.append(row);
@@ -176,7 +237,7 @@ function renderDiscovery(){
     '<div class="mini-head"><b>最近使った</b></div>'+
     (recent.length?'<div class="recent-mini">'+recent.map(x=>'<button data-recent-id="'+x.id+'"><span>'+x.category+'</span>'+x.text+'</button>').join("")+'</div>':'<div class="rank-empty small">まだ履歴はありません。</div>');
   board.querySelector("[data-open-library]")?.addEventListener("click",()=>go("library"));
-  board.querySelectorAll("[data-recent-id]").forEach(b=>b.onclick=()=>{const it=recent.find(x=>x.id===b.dataset.recentId);if(it){trackItem(it);start(it.text)}});
+  board.querySelectorAll("[data-recent-id]").forEach(b=>b.onclick=()=>{const it=recent.find(x=>x.id===b.dataset.recentId);if(it)launchContent(it)});
 }
 function psychPrompt(t){return t.q+" "+(t.options||[]).map((o,i)=>String(i+1)+" "+o).join(" / ")}
 function renderPsych(){
@@ -186,10 +247,10 @@ function renderPsych(){
   $("#psychQ").textContent=t.q;
   const ops=$("#psychOptions");
   (t.options||[]).forEach((o,i)=>{const b=document.createElement("button");b.textContent=String(i+1)+" "+o;b.onclick=()=>{$("#psychResult").textContent=(t.results||[])[i]||"";trackItem({kind:"psych",category:t.category,text:psychPrompt(t)})};ops.append(b)});
-  $("#psychUse").onclick=()=>{const it={kind:"psych",category:t.category,text:psychPrompt(t)};trackItem(it);start(it.text)};
+  $("#psychUse").onclick=()=>{const it={kind:"psych",category:t.category,text:psychPrompt(t),raw:t};launchContent(it)};
   $("#psychNext").onclick=()=>{psychIndex=(psychIndex+1)%D.psych.length;renderPsych()};
 }
 ensureLibraryChips();renderLib();$("#search").oninput=e=>renderLib(e.target.value);renderPsych();
-$(".play").forEach(b=>b.onclick=()=>{const it=randomItem("games");if(it){trackItem(it);start(it.text)}});renderDiscovery();
+$(".play").forEach(b=>b.onclick=()=>{const it=randomItem("games");if(it)launchContent(it)});renderDiscovery();
 setMode(state.mode,true);update();initGateway();
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
