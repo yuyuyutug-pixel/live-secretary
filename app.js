@@ -82,7 +82,13 @@ function itemText(x,k="topic"){
 function makeItem(x,kind){return{kind,category:itemCategory(x),text:itemText(x,kind),raw:x}}
 function items(k){return(D[k]||[]).map(x=>makeItem(x,k))}
 function arr(k){return items(k).map(x=>x.text)}
-function randomItem(k){const a=items(k);return a.length?a[Math.floor(Math.random()*a.length)]:null}
+function randomItem(k){
+  const a=items(k);if(!a.length)return null;
+  const recent=new Set((Store.recent?.()||[]).slice(0,18).map(x=>x.id));
+  const fresh=a.filter(x=>!recent.has(Store.contentId?.(x.kind,x.category,x.text)));
+  const pool=fresh.length?fresh:a;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
 function trackItem(item){if(!item?.text)return;Store.trackUse?.(item);renderDiscovery?.()}
 function formatTime(sec){let m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
 function voice(t){return state.persona==="関西ツッコミ"?t+" ほな、数字だけでも答えてみよか。":state.persona==="毒舌"?t+" 静かすぎるので秘書が仕事します。":state.persona==="ふわふわ"?t+" 気軽に答えてね。":state.persona==="執事"?"皆様、"+t:t}
