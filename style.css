@@ -319,3 +319,34 @@ nav button.active b{border-radius:10px;background:linear-gradient(135deg,rgba(25
 
 .qicon img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 5px 12px rgba(0,0,0,.24))}
 .hero-bot,.assistant-avatar img,.bot-state img,.personas img,.secretary-stage img{image-rendering:auto}
+
+
+/* CONTENT DISCOVERY v3 */
+.libitem{padding:10px 10px 10px 12px}
+.libitem:before{margin-right:0}
+.lib-main{flex:1;min-width:0;border:0;background:transparent;color:#fff;text-align:left;padding:2px 0}
+.lib-main small{display:block}
+.lib-main p{margin:4px 0 0}
+.fav-btn{width:38px;height:38px;flex:0 0 38px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#151d33;color:#ffcf63;font-size:19px;display:grid;place-items:center}
+.lib-empty,.rank-empty{border:1px dashed rgba(255,255,255,.10);border-radius:15px;padding:16px;color:#7f899f;font-size:10px;line-height:1.6;text-align:center}
+.rank-empty.small{padding:11px}
+.usage-board{margin:14px 0 6px;padding:14px;background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(24,18,44,.98));border:1px solid var(--line);border-radius:20px}
+.section-head.compact{margin:0 0 10px}
+.rank-list{display:grid;gap:7px}
+.rank-list>div{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:9px 10px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05)}
+.rank-list b{font-family:var(--metric);font-size:12px;color:#76e4ee}
+.rank-list span{font-size:11px;font-weight:800}
+.rank-list em{font-family:var(--metric);font-size:8px;font-style:normal;color:#8f99ad}
+.mini-head{margin:14px 2px 8px;font-size:10px;color:#c7cde0}
+.recent-mini{display:grid;gap:6px}
+.recent-mini button{width:100%;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:#10172b;color:#dfe4f2;text-align:left;padding:9px 10px;font-size:9px;line-height:1.45}
+.recent-mini button span{display:inline-block;margin-right:7px;color:#ff77bb;font-size:8px;font-weight:800}
+.psych-result{min-height:0;margin:10px 0 4px;padding:0;color:#cbd4e8;font-size:10px;line-height:1.65}
+.psych-result:not(:empty){padding:12px;border-radius:14px;background:linear-gradient(120deg,rgba(255,79,163,.10),rgba(104,103,255,.12));border:1px solid rgba(255,255,255,.07)}
+.psych-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.psych-actions button{margin:0;text-align:center;font-weight:800}
+#psychOptions{display:grid}
+@media(max-width:420px){
+  .usage-board{padding:12px}
+  .rank-list>div{padding:8px 9px}
+}
