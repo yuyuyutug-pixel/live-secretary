@@ -372,3 +372,74 @@ nav button.active b{border-radius:10px;background:linear-gradient(135deg,rgba(25
 .interactive-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
 .interactive-foot span{font-size:8px;color:#7f8ba3}
 .interactive-foot button{border:1px solid rgba(255,255,255,.08);border-radius:10px;background:#202746;color:#fff;padding:7px 10px;font-size:8px;font-weight:800}
+
+
+/* LIVE COPILOT REDESIGN v9 */
+.live-glance{background:linear-gradient(145deg,#0f172a,#0a1020);border:1px solid var(--line);border-radius:18px;padding:11px 12px;margin-bottom:10px}
+.live-glance .live-stats{margin:0}
+.live-glance .live-context{margin-top:8px}
+.copilot-card{background:linear-gradient(145deg,rgba(18,26,49,.98),rgba(24,17,43,.98));border:1px solid rgba(154,103,255,.20);border-radius:20px;padding:13px;margin-bottom:10px;box-shadow:0 16px 34px rgba(0,0,0,.16)}
+.copilot-head{display:flex;align-items:center;gap:9px}
+.assistant-avatar.mini{width:42px;height:42px;flex:0 0 42px;margin:0}
+.assistant-avatar.mini img{width:40px;height:40px}
+.copilot-head>div:nth-child(2){min-width:0;flex:1}
+.copilot-head small{display:block;font-family:var(--metric);font-size:7px;letter-spacing:.13em;color:#73e4ed;font-weight:800}
+.copilot-head b{display:block;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cue-urgency{font-family:var(--metric);font-size:7px;font-weight:800;letter-spacing:.08em;border:1px solid rgba(255,255,255,.08);background:#12192d;border-radius:999px;padding:6px 8px;color:#9ba5ba}
+.cue-card{margin-top:11px;padding:13px;border-radius:16px;background:linear-gradient(135deg,rgba(82,53,150,.20),rgba(20,49,65,.18));border:1px solid rgba(255,255,255,.07)}
+.cue-card.is-idle{background:rgba(255,255,255,.025)}
+.cue-card>small{font-family:var(--metric);font-size:7px;letter-spacing:.12em;color:#ff7bbc;font-weight:800}
+.cue-card h2{font-family:var(--display);font-size:16px;line-height:1.45;margin:6px 0 5px}
+.cue-card p{font-size:10px;line-height:1.6;color:#9aa4b9;margin:0}
+.cue-actions{display:grid;grid-template-columns:1.35fr .8fr .8fr;gap:7px;margin-top:12px}
+.cue-actions button{border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#161e35;color:#e9edfa;padding:10px 8px;font-size:9px;font-weight:800}
+.cue-actions .cue-primary{background:linear-gradient(135deg,#6f5bea,#9c50e8);border:0}
+.cue-actions button:disabled{opacity:.42}
+.feed-card{background:#0d1426;border:1px solid var(--line);border-radius:18px;padding:11px 11px 7px;margin-bottom:10px}
+.feed-head{display:flex;align-items:center;justify-content:space-between;padding:2px 1px 8px;border-bottom:1px solid rgba(255,255,255,.055)}
+.feed-head small{display:block;font-family:var(--metric);font-size:7px;color:#6edfe8;letter-spacing:.12em}
+.feed-head b{display:block;font-size:10px;margin-top:2px}
+.feed-head>span{font-size:8px;color:#7e899f}
+.feed-card #feed{max-height:210px;overflow:auto;padding:4px 1px}
+.feed-card .message{margin:7px 0}
+.feed-card .message>span{width:29px;height:29px;flex-basis:29px;border-radius:10px}
+.feed-card .message p{font-size:9px;line-height:1.5;padding:8px 9px}
+.demo-simulator{background:linear-gradient(145deg,rgba(12,20,37,.98),rgba(19,23,43,.98));border:1px dashed rgba(122,139,177,.22);border-radius:17px;padding:11px;margin-bottom:10px}
+.demo-simulator[hidden]{display:none}
+.demo-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.demo-head small{display:block;font-family:var(--metric);font-size:7px;color:#f2a8d6;letter-spacing:.12em}
+.demo-head b{display:block;font-size:10px;margin-top:2px}
+.demo-head>span{font-size:7px;color:#657188;text-align:right}
+.demo-simulator .composer{margin:9px 0 8px}
+.demo-simulator .composer input{padding:11px 12px}
+.demo-simulator .composer button{padding:0 14px}
+.demo-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.demo-actions button{border:1px solid rgba(255,255,255,.07);border-radius:11px;background:#121a2f;color:white;padding:9px}
+.demo-actions b{display:inline-block;margin-right:7px;color:#cda7ff;font-family:var(--metric);font-size:9px}
+.demo-actions span{font-size:8px;color:#8f99ae}
+.quick-tools{margin:12px 0 10px}
+.quick-tools-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
+.quick-tools-head small{font-family:var(--metric);font-size:7px;color:#6ee2eb;letter-spacing:.12em}
+.quick-tools-head span{font-size:7px;color:#6e7990}
+.quick-tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.quick-tools-grid button{min-height:54px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#11192f,#0e1529);color:#fff;padding:8px 5px}
+.quick-tools-grid b{display:block;font-size:10px}
+.quick-tools-grid span{display:block;font-size:7px;color:#7f899f;margin-top:3px}
+.secretary-pick{width:100%;display:flex;align-items:center;justify-content:space-between;margin-top:7px;border:1px solid rgba(75,221,235,.18);border-radius:13px;background:linear-gradient(100deg,rgba(75,221,235,.10),rgba(154,103,255,.15));color:#eafaff;padding:11px 12px;font-size:9px;font-weight:800}
+.secretary-pick b{font-size:16px;color:#75e4ec}
+.end-live-wide{width:100%;border:1px solid rgba(255,91,121,.18);border-radius:13px;background:linear-gradient(145deg,#24131f,#191119);color:#ff8aa1;padding:11px;font-size:9px;font-weight:800;margin:2px 0 8px}
+.psych-result-list{display:grid;gap:5px;margin-top:9px;padding:8px;border-radius:12px;background:rgba(255,255,255,.025);max-height:126px;overflow:auto}
+.psych-result-list>div{display:grid;grid-template-columns:22px 1fr;gap:7px;align-items:start}
+.psych-result-list b{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;background:#171f37;color:#d9c2ff;font-size:8px}
+.psych-result-list span{font-size:8px;line-height:1.45;color:#aeb7ca}
+#live .interactive-panel{padding:11px;margin:10px 0}
+#live .interactive-row{padding:7px 8px}
+#live .interactive-row>div{grid-template-columns:22px 1fr auto}
+#live .interactive-row span{font-size:9px}
+#live .interactive-head strong{font-size:11px}
+#live{padding-bottom:92px}
+@media(max-width:380px){
+  .cue-actions{grid-template-columns:1fr 1fr}
+  .cue-actions .cue-primary{grid-column:1/-1}
+  .quick-tools-grid{grid-template-columns:1fr 1fr}
+}
