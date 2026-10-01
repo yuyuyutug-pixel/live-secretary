@@ -46,6 +46,7 @@ class SpoonLiveProvider extends LiveProvider{
     if(!st.authenticated)throw new Error("Spoon連携が必要です");
     if(!this.es){
       this.es=new EventSource("/api/events");
+      this.es.onopen=()=>this.emit("live",{state:"connected"});
       const bind=(name)=>this.es.addEventListener(name,e=>this.route(name,this.parse(e.data)));
       ["chat","presence","like","donation","end","live_state","gateway","message"].forEach(bind);
       this.es.addEventListener("error",e=>this.emit("live",{state:"gateway_error",detail:e}));
