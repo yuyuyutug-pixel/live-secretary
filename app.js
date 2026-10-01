@@ -33,7 +33,7 @@ function toast(t){
 
 function go(id){
   document.body.classList.toggle("in-live",id==="live");
-  $(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+  $$(".page").forEach(p=>p.classList.toggle("active",p.id===id));
   $$("nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));
   if(id==="content")renderContent();
   if(id==="history")renderHistory();
@@ -250,7 +250,7 @@ function handleInteractiveAnswer(text,name){
 }
 
 function setGuideStep(n){
-  $(".guide-strip span").forEach((x,i)=>x.classList.toggle("active",i===n-1));
+  $$(".guide-strip span").forEach((x,i)=>x.classList.toggle("active",i===n-1));
 }
 function renderInteractive(){
   const panel=$("#interactivePanel"); if(!panel)return;
