@@ -192,15 +192,16 @@ function renderLiveInteractive(){
   panel.hidden=false;
   const labels=a.type==="psych"?(a.test.options||[]):Array.from({length:a.votes.length},(_,i)=>String(i+1));
   const title=a.type==="psych"?"心理テスト":a.type==="choice"?"二択":"参加型ゲーム";
+  const question=a.type==="psych"?a.test.q:a.text;
   const bars=labels.map((label,i)=>{
     const count=a.votes[i]||0,pct=a.total?Math.round(count/a.total*100):0;
-    const result=a.type==="psych"&&a.revealed?(a.test.results?.[i]||""):"";
-    return '<div class="interactive-row"><div><b>'+(i+1)+'</b><span>'+label+'</span><em>'+count+'票 · '+pct+'%</em></div><i><u style="width:'+pct+'%"></u></i>'+(result?'<p>'+result+'</p>':'')+'</div>';
+    return '<div class="interactive-row"><div><b>'+(i+1)+'</b><span>'+label+'</span><em>'+count+'票 · '+pct+'%</em></div><i><u style="width:'+pct+'%"></u></i></div>';
   }).join("");
-  panel.innerHTML='<div class="interactive-head"><div><small>'+title+' · '+a.category+'</small><strong>'+a.text.split(" 1 ")[0]+'</strong></div><button id="interactiveClose">×</button></div>'+
-    '<div class="interactive-votes">'+bars+'</div>'+
-    '<div class="interactive-foot"><span>数字コメントを自動集計 · '+a.total+'回答</span>'+(a.type==="psych"?'<button id="interactiveReveal">'+(a.revealed?"結果表示中":"結果を見る")+'</button>':'')+'</div>';
-  $("#interactiveClose").onclick=()=>{state.activeInteractive=null;renderLiveInteractive()};
+  const resultList=a.type==="psych"&&a.revealed?'<div class="psych-result-list">'+(a.test.results||[]).map((r,i)=>'<div><b>'+(i+1)+'</b><span>'+r+'</span></div>').join("")+'</div>':"";
+  panel.innerHTML='<div class="interactive-head"><div><small>'+title+' · '+a.category+'</small><strong>'+question+'</strong></div><button id="interactiveClose">×</button></div>'+
+    '<div class="interactive-votes">'+bars+'</div>'+resultList+
+    '<div class="interactive-foot"><span>'+a.total+'回答を集計中</span>'+(a.type==="psych"?'<button id="interactiveReveal">'+(a.revealed?"結果を閉じる":"結果一覧")+'</button>':'')+'</div>';
+  $("#interactiveClose").onclick=()=>{state.activeInteractive=null;renderLiveInteractive();clearCue("企画を終了しました")};
   if($("#interactiveReveal"))$("#interactiveReveal").onclick=()=>{a.revealed=!a.revealed;renderLiveInteractive()};
 }
 function handleInteractiveAnswer(text,name="リスナー"){
