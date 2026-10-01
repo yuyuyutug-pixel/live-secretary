@@ -100,13 +100,13 @@ function startInteractive(item){
   if(item.kind==="psych"){
     const test=item.raw||D.psych?.find(x=>psychPrompt(x)===item.text);
     if(!test)return;
-    active={type:"psych",kind:"psych",category:test.category,test,text:psychPrompt(test),votes:[0,0,0,0],total:0,revealed:false};
+    active={type:"psych",kind:"psych",category:test.category,test,text:psychPrompt(test),votes:[0,0,0,0],total:0,revealed:false,answers:{}};
   }else if(item.kind==="choices"){
     const parts=item.text.split(/\s+/);
-    active={type:"choice",kind:"choices",category:item.category,text:item.text,votes:[0,0],total:0,revealed:false};
+    active={type:"choice",kind:"choices",category:item.category,text:item.text,votes:[0,0],total:0,revealed:false,answers:{}};
   }else if(item.kind==="games"){
     const max=/[③④34]/.test(item.text)?4:2;
-    active={type:"game",kind:"games",category:item.category,text:item.text,votes:Array(max).fill(0),total:0,revealed:false};
+    active={type:"game",kind:"games",category:item.category,text:item.text,votes:Array(max).fill(0),total:0,revealed:false,answers:{}};
   }else return;
   state.activeInteractive=active;trackItem(item);renderLiveInteractive();
   bot(interactivePrompt(active));
@@ -131,10 +131,14 @@ function renderLiveInteractive(){
 }
 function handleInteractiveAnswer(text,name="リスナー"){
   const a=state.activeInteractive,n=answerNumber(text);if(!a||!n||n>a.votes.length)return false;
-  a.votes[n-1]++;a.total++;renderLiveInteractive();
+  const voter=String(name||"リスナー"),prev=a.answers?.[voter];
+  if(prev===n){$("#stateText").textContent=voter+" はすでに "+n+" に回答済みです";return true}
+  if(prev){a.votes[prev-1]=Math.max(0,(a.votes[prev-1]||0)-1)}
+  else a.total++;
+  a.answers[voter]=n;a.votes[n-1]=(a.votes[n-1]||0)+1;renderLiveInteractive();
   if(a.type==="psych"&&a.revealed){
-    const result=a.test.results?.[n-1];if(result)$("#stateText").textContent=name+"："+result;
-  }else $("#stateText").textContent=name+" の回答を集計しました";
+    const result=a.test.results?.[n-1];if(result)$("#stateText").textContent=voter+"："+result;
+  }else $("#stateText").textContent=prev?voter+" が回答を "+prev+"→"+n+" に変更しました":voter+" の回答を集計しました";
   return true;
 }
 function launchContent(item){
