@@ -141,6 +141,30 @@ function handleInteractiveAnswer(text,name="リスナー"){
   }else $("#stateText").textContent=prev?voter+" が回答を "+prev+"→"+n+" に変更しました":voter+" の回答を集計しました";
   return true;
 }
+
+function demoReplyFor(text,handled){
+  const v=String(text||"").trim();
+  if(handled){
+    const a=state.activeInteractive,n=answerNumber(v),count=n?(a?.votes?.[n-1]||0):0;
+    if(a?.type==="psych"){
+      const suffix=a.revealed&&n?(a.test.results?.[n-1]||""):"";
+      add(n+"番に1票。現在 "+a.total+"回答"+(suffix?"。"+suffix:""),"bot");
+    }else if(n){
+      add(n+"番に1票。現在 "+(a?.total||0)+"回答です。","bot");
+    }
+    return;
+  }
+  const lower=v.toLowerCase();
+  let reply="";
+  if(/[?？]/.test(v))reply="それ気になる。みんなはどう思う？";
+  else if(/疲|しんど|眠/.test(v))reply="おつかれさま。今日は無理せず、ゆるく話そ。";
+  else if(/嬉|楽しかった|最高|好き/.test(v))reply="ええやん。その話もう少し聞きたい。";
+  else if(/恋|彼氏|彼女|好きな人/.test(v))reply="恋バナきた。そこ、もう一段だけ詳しく聞きたい。";
+  else if(/仕事|会社|バイト/.test(v))reply="仕事の話やね。今日いちばん大変やったのどこ？";
+  else if(/ご飯|ごはん|食べ|ラーメン|焼肉|寿司/.test(v))reply="それ飯テロやな。今食べるなら何が一番？";
+  else reply=pick(["それ気になる。もうちょい聞かせて。","なるほど。みんなならどうする？","それ分かる人、コメントで教えて。","そこから話広げられそう。もう一個聞いていい？"]);
+  setTimeout(()=>{if(state.running)add(reply,"bot")},350);
+}
 function launchContent(item){
   if(!item?.text)return;
   if(!state.running){start().then(()=>{if(item.kind==="topics"){trackItem(item);bot(item.text)}else startInteractive(item)});return}
@@ -193,7 +217,7 @@ async function send(){
     try{await provider.sendMessage(v);add("BOT："+v,"bot");$("#manual").value="";$("#stateText").textContent="Botメッセージを送信しました"}catch(e){toast(e.message||"送信に失敗しました")}
     return;
   }
-  state.comments++;state.silence=0;if(state.lastBot){state.responded++;state.lastBot=false}add(v,"user");handleInteractiveAnswer(v,"デモ");$("#manual").value="";if(!state.activeInteractive)$("#stateText").textContent="コメントが動いたので待機します";update();
+  state.comments++;state.silence=0;if(state.lastBot){state.responded++;state.lastBot=false}add(v,"user");const handled=handleInteractiveAnswer(v,"デモ");demoReplyFor(v,handled);$("#manual").value="";if(!handled)$("#stateText").textContent="コメントを受信。秘書が反応します";update();
 }
 $("#send").onclick=send;$("#manual").addEventListener("keydown",e=>e.key==="Enter"&&send());
 
