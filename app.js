@@ -706,6 +706,34 @@ function renderHistory(){
   if(rh)rh.innerHTML=recent.length?recent.slice(0,12).map(x=>'<div class="history-row"><span>'+escapeHtml(x.category)+'</span><p>'+escapeHtml(x.text)+'</p></div>').join(""):'<div class="empty-list">まだ履歴がありません</div>';
 }
 
+function runtimeSelfCheck(){
+  const report={ok:true,checks:[],errors:[]};
+  const check=(name,fn)=>{
+    try{const value=fn();if(value===false)throw new Error("failed");report.checks.push(name)}
+    catch(e){report.ok=false;report.errors.push(name+": "+(e?.message||e))}
+  };
+  const original=document.querySelector(".page.active")?.id||"home";
+  check("pages",()=>["home","live","content","history","settings"].every(id=>!!$("#"+id)));
+  check("navigation-home",()=>{go("home");return $("#home")?.classList.contains("active")});
+  check("navigation-content",()=>{go("content");return $("#content")?.classList.contains("active")});
+  check("navigation-history",()=>{go("history");return $("#history")?.classList.contains("active")});
+  check("navigation-settings",()=>{go("settings");return $("#settings")?.classList.contains("active")});
+  check("start-handler",()=>typeof $("#start")?.onclick==="function");
+  check("demo-send-handler",()=>typeof $("#send")?.onclick==="function");
+  check("cue-handler",()=>typeof $("#sendCue")?.onclick==="function");
+  check("content-render",()=>{renderContent();return $("#libraryList")?.children.length>0});
+  check("topic-suggestion",()=>!!suggestionFor("topics","selftest"));
+  check("choice-parser",()=>parseTwoChoice("朝型① 夜型②").options.length===2);
+  go(original);
+  window.__LIVE_SECRETARY_SELFTEST__=report;
+  const fatal=$("#fatalError");
+  if(fatal){
+    fatal.hidden=report.ok;
+    fatal.textContent=report.ok?"":"動作確認エラー: "+report.errors.join(" / ");
+  }
+  return report;
+}
+
 applySavedSettings();
 renderHome();
 renderContent();
@@ -713,6 +741,7 @@ renderHistory();
 renderCue();
 renderInteractive();
 initGateway();
+runtimeSelfCheck();
 
 if("serviceWorker"in navigator){
   window.addEventListener("load",async()=>{
