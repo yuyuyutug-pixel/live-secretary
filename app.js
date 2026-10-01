@@ -68,20 +68,30 @@ function wireProvider(){
 
 function setMode(m,q=false){state.mode=m||"雑談";$$("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===state.mode));$("#settingsModeLabel")&&($("#settingsModeLabel").textContent=state.mode);$("#liveMode")&&($("#liveMode").textContent=state.mode);Store.save({mode:state.mode});if(!q)toast(state.mode+"モードに変更")}
 $$("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-function arr(k){return(D[k]||[]).map(x=>Array.isArray(x)?x[1]:x)}
+function itemCategory(x){return Array.isArray(x)?x[0]:(x?.category||"その他")}
+function itemText(x,k="topic"){
+  if(Array.isArray(x))return x[1];
+  if(k==="psych"&&x?.q)return x.q+" "+(x.options||[]).map((o,i)=>String(i+1)+" "+o).join(" / ");
+  return x?.text||x?.q||String(x||"");
+}
+function makeItem(x,kind){return{kind,category:itemCategory(x),text:itemText(x,kind),raw:x}}
+function items(k){return(D[k]||[]).map(x=>makeItem(x,k))}
+function arr(k){return items(k).map(x=>x.text)}
+function randomItem(k){const a=items(k);return a.length?a[Math.floor(Math.random()*a.length)]:null}
+function trackItem(item){if(!item?.text)return;Store.trackUse?.(item);renderDiscovery?.()}
 function formatTime(sec){let m=Math.floor(sec/60),s=sec%60;return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")}
 function voice(t){return state.persona==="関西ツッコミ"?t+" ほな、数字だけでも答えてみよか。":state.persona==="毒舌"?t+" 静かすぎるので秘書が仕事します。":state.persona==="ふわふわ"?t+" 気軽に答えてね。":state.persona==="執事"?"皆様、"+t:t}
 function add(t,type="bot"){let d=document.createElement("div");d.className="message "+type;d.innerHTML="<span>"+(type==="bot"?"":type==="event"?"◆":"●")+"</span><p></p>";d.querySelector("p").textContent=t;$("#feed").append(d);$("#feed").scrollTop=99999}
-function bot(t){
-  if(!t)return;const spoken=voice(t);add(spoken);state.interventions++;state.lastBot=true;$("#stateText").textContent="会話のきっかけを提案しました";update();
+function bot(t,item=null){
+  if(!t)return;if(item)trackItem(item);const spoken=voice(t);add(spoken);state.interventions++;state.lastBot=true;$("#stateText").textContent="会話のきっかけを提案しました";update();
   if(remote&&state.running)provider.sendMessage(spoken).catch(e=>toast("Bot送信失敗: "+e.message));
 }
 function features(){let o={};$$("[data-feature]").forEach(x=>o[x.dataset.feature]=x.checked);return o}
 function intervene(force=false){
   let lv=["low","normal","high"][$("#range").value],e=new ConversationEngine({level:lv,mode:state.mode});e.lastInterventionAt=state._last;
-  if(force){let pref={"わちゃわちゃ":"games","恋バナ":"psych","深夜":"topics","初見歓迎":"choices"}[state.mode]||"topics";bot(pick(arr(pref)));$("#stateText").textContent="手動で次の一手を提案しました";return}
+  if(force){let pref={"わちゃわちゃ":"games","恋バナ":"psych","深夜":"topics","初見歓迎":"choices"}[state.mode]||"topics";let it=randomItem(pref);if(it)bot(it.text,it);$("#stateText").textContent="手動で次の一手を提案しました";return}
   let r=e.decide({silence:state.silence,active:false,features:features()});
-  if(r.action!=="wait"){state._last=state.silence;let map={choice:"choices",topic:"topics",psych:"psych",game:"games"};bot(pick(arr(map[r.action]||"topics")))}
+  if(r.action!=="wait"){state._last=state.silence;let map={choice:"choices",topic:"topics",psych:"psych",game:"games"},it=randomItem(map[r.action]||"topics");if(it)bot(it.text,it)}
   else $("#stateText").textContent=r.reason||"まだ介入せず見守っています";
 }
 function update(){
@@ -101,10 +111,10 @@ async function start(topic){
   let t=topic||$("#topic").value.trim();if(t)add("今日のテーマ「"+t+"」を覚えました。");
   $("#stateText").textContent=remote?"Spoon LIVEを接続しています":"会話を見守っています";go("live");update();
 }
-$("#start").onclick=()=>start();$("#useRecommend").onclick=()=>start("最近ちょっと嬉しかったこと");
+$("#start").onclick=()=>start();$("#useRecommend").onclick=()=>{const it={kind:"topics",category:"初見",text:"最近ちょっと嬉しかったこと"};trackItem(it);start(it.text)};
 $("#skip").onclick=()=>{state.silence+=30;state.maxSilence=Math.max(state.maxSilence,state.silence);intervene();update()};
 $("#newcomer").onclick=()=>{if(remote){toast("本番ではSpoonの入室イベントを自動受信します");return}state.viewers++;if(features().new)bot("初見さんいらっしゃい！ 今の気分は ①元気 ②普通 ③お疲れ？ 数字だけでもどうぞ。");update()};
-$("#psychNow").onclick=()=>bot(pick(arr("psych")));$("#gameNow").onclick=()=>bot(pick(arr("games")));$("#instantAssist").onclick=()=>intervene(true);
+$("#psychNow").onclick=()=>{const it=randomItem("psych");if(it)bot(it.text,it)};$("#gameNow").onclick=()=>{const it=randomItem("games");if(it)bot(it.text,it)};$("#instantAssist").onclick=()=>intervene(true);
 async function endCurrentLive(fromSpoon=false){
   state.running=false;clearInterval(sessionTimer);if(remote&&!fromSpoon)await provider.disconnect().catch(()=>{});
   let rr=state.interventions?Math.round(state.responded/state.interventions*100):0;Store.addSession&&Store.addSession({at:new Date().toISOString(),mode:state.mode,persona:state.persona,duration:state.duration,viewers:state.viewers,comments:state.comments,interventions:state.interventions,responseRate:rr,maxSilence:state.maxSilence});
@@ -128,8 +138,58 @@ $("#range").oninput=e=>$("#levelLabel").textContent=["控えめ","普通","積�
 $("#saveSettings").onclick=()=>{Store.save({persona:state.persona,mode:state.mode,level:$("#range").value,topic:$("#topic").value,features:features()});toast("設定を保存しました")};
 if(saved.level)$("#range").value=saved.level;if(saved.topic)$("#topic").value=saved.topic;if(saved.features)$$("[data-feature]").forEach(x=>x.checked=saved.features[x.dataset.feature]??x.checked);$("#levelLabel").textContent=["控えめ","普通","積極的"][$("#range").value];
 
-function renderLib(filter=""){let list=$("#libraryList");list.innerHTML="";[["話題",D.topics],["二択",D.choices],["心理テスト",D.psych],["ゲーム",D.games]].forEach(([cat,a])=>(a||[]).forEach(x=>{let text=Array.isArray(x)?x[1]:x,tag=Array.isArray(x)?x[0]:"";if(filter&&!text.includes(filter)&&!tag.includes(filter))return;let b=document.createElement("button");b.className="libitem";b.innerHTML="<div><small>"+cat+" · "+tag+"</small><p></p></div>";b.querySelector("p").textContent=text;b.onclick=()=>start(text);list.append(b)}))}
-renderLib();$("#search").oninput=e=>renderLib(e.target.value);$$(".chips button").forEach(b=>b.onclick=()=>{$$(".chips button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderLib(b.textContent==="すべて"?"":b.textContent)});
-$$(".testcard button").forEach(b=>b.onclick=()=>{bot($("#psychQ").textContent+" "+b.textContent);go("live")});$$(".play").forEach(b=>b.onclick=()=>{bot(pick(arr("games")));go("live")});
+let libraryMode="すべて",psychIndex=0;
+function allLibraryItems(){
+  return [["話題","topics"],["二択","choices"],["心理テスト","psych"],["ゲーム","games"]].flatMap(([label,key])=>items(key).map(x=>({...x,label})));
+}
+function ensureLibraryChips(){
+  const wrap=$("#library .chips");if(!wrap)return;
+  const cats=["すべて","お気に入り","最近",...(D.categories||[])];
+  wrap.innerHTML="";
+  cats.forEach(cat=>{const b=document.createElement("button");b.textContent=cat;b.classList.toggle("active",cat===libraryMode);b.onclick=()=>{libraryMode=cat;ensureLibraryChips();renderLib($("#search")?.value||"")};wrap.append(b)});
+}
+function renderLib(search=""){
+  const list=$("#libraryList");if(!list)return;list.innerHTML="";
+  let data=allLibraryItems();
+  if(libraryMode==="お気に入り")data=Store.favorites?.()||[];
+  else if(libraryMode==="最近")data=Store.recent?.()||[];
+  else if(libraryMode!=="すべて")data=data.filter(x=>x.category===libraryMode);
+  const q=search.trim().toLowerCase();
+  if(q)data=data.filter(x=>(x.text+" "+x.category+" "+(x.label||x.kind||"")).toLowerCase().includes(q));
+  if(!data.length){list.innerHTML='<div class="lib-empty">まだ該当するカードがありません。</div>';return}
+  data.slice(0,250).forEach(item=>{
+    const row=document.createElement("div");row.className="libitem";
+    const main=document.createElement("button");main.className="lib-main";
+    main.innerHTML="<small></small><p></p>";main.querySelector("small").textContent=(item.label||({"topics":"話題","choices":"二択","psych":"心理テスト","games":"ゲーム"}[item.kind]||"カード"))+" · "+item.category;main.querySelector("p").textContent=item.text;
+    main.onclick=()=>{trackItem(item);start(item.text)};
+    const fav=document.createElement("button");fav.className="fav-btn";fav.textContent=Store.isFavorite?.(item)?"★":"☆";fav.setAttribute("aria-label","お気に入り");
+    fav.onclick=e=>{e.stopPropagation();const on=Store.toggleFavorite?.(item);fav.textContent=on?"★":"☆";toast(on?"お気に入りに追加":"お気に入りから削除");renderDiscovery()};
+    row.append(main,fav);list.append(row);
+  });
+}
+function renderDiscovery(){
+  let board=$("#usageRank");
+  if(!board){board=document.createElement("section");board.id="usageRank";board.className="usage-board";const rec=$(".recommend");rec?.after(board)}
+  const ranks=Store.usageRanking?.(5)||[],recent=Store.recent?.().slice(0,3)||[];
+  board.innerHTML='<div class="section-head compact"><div><small>MY TRENDS</small><h2>よく使うカテゴリ</h2></div><button data-open-library>一覧</button></div>'+
+    (ranks.length?'<div class="rank-list">'+ranks.map(r=>'<div><b>'+r.rank+'</b><span>'+r.category+'</span><em>'+r.count+'回</em></div>').join("")+'</div>':'<div class="rank-empty">カードを使うと、ここにあなたの利用ランキングが育ちます。</div>')+
+    '<div class="mini-head"><b>最近使った</b></div>'+
+    (recent.length?'<div class="recent-mini">'+recent.map(x=>'<button data-recent-id="'+x.id+'"><span>'+x.category+'</span>'+x.text+'</button>').join("")+'</div>':'<div class="rank-empty small">まだ履歴はありません。</div>');
+  board.querySelector("[data-open-library]")?.addEventListener("click",()=>go("library"));
+  board.querySelectorAll("[data-recent-id]").forEach(b=>b.onclick=()=>{const it=recent.find(x=>x.id===b.dataset.recentId);if(it){trackItem(it);start(it.text)}});
+}
+function psychPrompt(t){return t.q+" "+(t.options||[]).map((o,i)=>String(i+1)+" "+o).join(" / ")}
+function renderPsych(){
+  const card=$(".testcard");if(!card||!D.psych?.length)return;
+  const t=D.psych[psychIndex%D.psych.length];
+  card.innerHTML='<span class="testno">PSYCHOLOGY · '+t.category+'</span><h2 id="psychQ"></h2><div id="psychOptions"></div><div id="psychResult" class="psych-result"></div><div class="psych-actions"><button id="psychUse">配信で使う</button><button id="psychNext">次のテスト</button></div><small>※娯楽用コンテンツです。心理学的診断ではありません。</small>';
+  $("#psychQ").textContent=t.q;
+  const ops=$("#psychOptions");
+  (t.options||[]).forEach((o,i)=>{const b=document.createElement("button");b.textContent=String(i+1)+" "+o;b.onclick=()=>{$("#psychResult").textContent=(t.results||[])[i]||"";trackItem({kind:"psych",category:t.category,text:psychPrompt(t)})};ops.append(b)});
+  $("#psychUse").onclick=()=>{const it={kind:"psych",category:t.category,text:psychPrompt(t)};trackItem(it);start(it.text)};
+  $("#psychNext").onclick=()=>{psychIndex=(psychIndex+1)%D.psych.length;renderPsych()};
+}
+ensureLibraryChips();renderLib();$("#search").oninput=e=>renderLib(e.target.value);renderPsych();
+$(".play").forEach(b=>b.onclick=()=>{const it=randomItem("games");if(it){trackItem(it);start(it.text)}});renderDiscovery();
 setMode(state.mode,true);update();initGateway();
 if("serviceWorker"in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
