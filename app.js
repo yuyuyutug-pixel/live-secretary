@@ -35,6 +35,7 @@ async function initGateway(){
     apiStatus=await r.json();
     if(apiStatus.authenticated){provider=new SpoonLiveProvider();remote=true;setConnection("READY",false)}
     else{provider=new MockLiveProvider();remote=false;setConnection(apiStatus.configured?"CONNECT":"DEMO",false)}
+    const demo=$("#demoSimulator");if(demo)demo.hidden=remote;
     wireProvider();refreshConnectButton();
     const q=new URLSearchParams(location.search);
     if(q.get("oauth")==="connected"){toast("Spoon連携が完了しました");history.replaceState({},"",location.pathname)}
@@ -231,6 +232,7 @@ function features(){let o={};$$("[data-feature]").forEach(x=>o[x.dataset.feature
 function intervene(force=false){
   let lv=["low","normal","high"][$("#range").value],e=new ConversationEngine({level:lv,mode:state.mode});e.lastInterventionAt=state._last;
   if(force){suggestNext(true);return}
+  if(state.cue)return
   let r=e.decide({silence:state.silence,active:false,features:features()});
   if(r.action!=="wait"){
     state._last=state.silence;const map={choice:"choices",topic:"topics",psych:"psych",game:"games"},kind=map[r.action]||"topics";
