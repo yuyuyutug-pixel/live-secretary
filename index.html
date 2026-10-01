@@ -8,7 +8,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/p0/03_icon_app.png">
 <title>LIVE秘書</title>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 <main>
@@ -230,10 +230,10 @@
   <button data-go="settings"><b>⚙</b><span>設定</span></button>
 </nav>
 </main>
-<div id="toast"></div>
-<script src="content-data.js?v=11"></script>
-<script src="storage.js?v=11"></script>
-<script src="provider.js?v=11"></script>
-<script src="app.js?v=11"></script>
+<div id="fatalError" class="fatal-error" hidden></div><div id="toast"></div>
+<script src="content-data.js?v=12"></script>
+<script src="storage.js?v=12"></script>
+<script src="provider.js?v=12"></script>
+<script>window.addEventListener("error",function(e){var x=document.getElementById("fatalError");if(x){x.hidden=false;x.textContent="画面の読み込みでエラーが発生しました: "+(e.message||"unknown");}});</script><script src="app.js?v=12"></script>
 </body>
 </html>
