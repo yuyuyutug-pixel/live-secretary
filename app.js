@@ -32,7 +32,8 @@ function toast(t){
 }
 
 function go(id){
-  $$(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+  document.body.classList.toggle("in-live",id==="live");
+  $(".page").forEach(p=>p.classList.toggle("active",p.id===id));
   $$("nav button").forEach(b=>b.classList.toggle("active",b.dataset.go===id));
   if(id==="content")renderContent();
   if(id==="history")renderHistory();
@@ -48,10 +49,11 @@ function features(){
 }
 
 function saveSettings(){
+  state.level=Number($("#range")?.value??state.level);
   Store.save({
     mode:state.mode,
     persona:state.persona,
-    level:Number($("#range")?.value??state.level),
+    level:state.level,
     topic:$("#topic")?.value||"",
     features:features()
   });
@@ -199,8 +201,9 @@ function startInteractive(item){
   if(!item)return;
   let a=null;
   if(item.kind==="psych"){
-    const t=item.raw;
-    a={type:"psych",item,test:t,question:t.q,options:t.options,votes:[0,0,0,0],answers:{},total:0,revealed:false};
+    const t=item.raw||D.psych?.find(x=>x.q===item.text||String(item.text||"").startsWith(x.q));
+    if(!t){toast("この心理テストを読み込めませんでした");return}
+    a={type:"psych",item:{...item,raw:t},test:t,question:t.q,options:t.options,votes:[0,0,0,0],answers:{},total:0,revealed:false};
   }else if(item.kind==="choices"){
     const p=parseTwoChoice(item.text);
     a={type:"vote",item,question:p.question,options:p.options,votes:[0,0],answers:{},total:0};
@@ -246,11 +249,15 @@ function handleInteractiveAnswer(text,name){
   return true;
 }
 
+function setGuideStep(n){
+  $(".guide-strip span").forEach((x,i)=>x.classList.toggle("active",i===n-1));
+}
 function renderInteractive(){
   const panel=$("#interactivePanel"); if(!panel)return;
   const a=state.activeInteractive;
-  if(!a){panel.hidden=true;panel.innerHTML="";return}
+  if(!a){panel.hidden=true;panel.innerHTML="";if(!state.cue)setGuideStep(1);return}
   panel.hidden=false;
+  setGuideStep(3);
   let body="";
   if(a.type==="free"){
     const top=Object.entries(a.counts).sort((x,y)=>y[1]-x[1]).slice(0,5);
@@ -323,12 +330,14 @@ function renderCue(){
 
 function setCue(cue){
   state.cue=cue;
+  setGuideStep(2);
   renderCue();
   if($("#stateText"))$("#stateText").textContent=cue.reason||"提案があります";
   if(features().autosend&&state.running)setTimeout(useCue,300);
 }
 function clearCue(msg="今は見守っています"){
   state.cue=null;
+  if(!state.activeInteractive)setGuideStep(1);
   renderCue();
   if($("#stateText"))$("#stateText").textContent=msg;
 }
